@@ -4,7 +4,6 @@ import json
 import cv2
 from tqdm import tqdm
 
-# --- Project imports (adjust paths to your repo structure) ---
 from images_functions.data_io.read_imgs_directory import list_images_in_directory
 from images_functions.data_io.read_data import read_image_from_cv2
 from images_functions.data_io.save_data import save_image_cv2
