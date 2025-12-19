@@ -1,7 +1,7 @@
 # eval_results.py
 import numpy as np
 import matplotlib.pyplot as plt
-
+import os
 from sklearn.metrics import (
     confusion_matrix,
     accuracy_score,
@@ -35,22 +35,41 @@ def compute_metrics(y_true, y_pred, average="macro", verbose=True):
         "f1": f1,
     }
 
-
 def plot_confusion_matrix(
     matrix,
     classes=None,
     cmap="viridis",
     title=None,
     ax=None,
+    plot_flag=True,
+    save_folder=None,
+    file_name=None,
+    show=True,
 ):
     """
     Dibuja una matriz de confusión.
-    Si se pasa un axis (ax), la dibuja ahí. Si no, crea una figura nueva.
+
+    Parámetros:
+      - matrix: np.ndarray con la matriz de confusión.
+      - classes: lista de nombres de clase.
+      - cmap: colormap de matplotlib.
+      - title: título opcional.
+      - ax: axis de matplotlib; si es None, crea una figura nueva.
+      - plot_flag: si False, no se dibuja nada (solo se devuelve).
+      - save_folder: si no es None y se ha creado figura, guarda la imagen en esa ruta.
+      - file_name: name of the file to save the plot
+      - show: si True y se ha creado figura, hace plt.show(); si False, solo cierra.
     """
+    if not plot_flag:
+        # No dibujamos nada, simplemente salimos.
+        return
+
     created_fig = False
     if ax is None:
         fig, ax = plt.subplots(figsize=(6, 6), dpi=200)
         created_fig = True
+    else:
+        fig = ax.figure
 
     # Heatmap
     im = ax.imshow(matrix, interpolation="nearest", cmap=cmap)
@@ -91,7 +110,17 @@ def plot_confusion_matrix(
 
     if created_fig:
         plt.tight_layout()
-        plt.show()
+
+        if save_folder is not None:
+            os.makedirs(save_folder, exist_ok=True)
+            file_name = file_name if file_name is not None else "confusion_matrix.png"
+            save_path = os.path.join(save_folder, file_name)
+            fig.savefig(save_path, dpi=200, bbox_inches="tight")
+
+        if show:
+            plt.show()
+        else:
+            plt.close(fig)
 
 
 def compute_pca_train_transform_val(
@@ -200,7 +229,8 @@ def evaluate_and_plot(
     pipeline=None,
     class_names=None,
     fig_title=None,
-    save_path=None,
+    save_folder=None,
+    file_name=None,
     show=True,
 ):
     """
@@ -253,7 +283,10 @@ def evaluate_and_plot(
 
     plt.tight_layout()
 
-    if save_path is not None:
+    if save_folder is not None:
+        os.makedirs(save_folder, exist_ok=True)
+        file_name = file_name if file_name is not None else "confusion_matrix.png"
+        save_path = os.path.join(save_folder, file_name)
         fig.savefig(save_path, dpi=200)
 
     if show:
@@ -272,7 +305,8 @@ def evaluate_and_plot_pca3(
     pipeline=None,
     class_names=None,
     fig_title=None,
-    save_path=None,
+    save_folder=None,
+    file_name=None,
     show=True,
 ):
     """
@@ -366,7 +400,10 @@ def evaluate_and_plot_pca3(
 
     plt.tight_layout(rect=[0, 0, 1, 0.95])
 
-    if save_path is not None:
+    if save_folder is not None:
+        os.makedirs(save_folder, exist_ok=True)
+        file_name = file_name if file_name is not None else "confusion_matrix.png"
+        save_path = os.path.join(save_folder, file_name)
         fig.savefig(save_path, dpi=200)
 
     if show:
@@ -375,3 +412,33 @@ def evaluate_and_plot_pca3(
         plt.close(fig)
 
     return metrics, cm
+
+
+
+def plot_acc_loss(history, save_folder=None, file_name=None, show=True):
+    """
+    Plots the accuracy and loss of a model during training.
+    """
+    fig, ax = plt.subplots(1, 2, figsize=(12, 5), dpi=200)
+    ax[0].plot(history.history['accuracy'])
+    ax[0].plot(history.history['val_accuracy'])
+    ax[0].set_title('Model accuracy')
+    ax[0].set_ylabel('Accuracy')
+    ax[0].set_xlabel('Epoch')
+    ax[0].legend(['Train', 'Validation'], loc='upper left')
+    ax[1].plot(history.history['loss'])
+    ax[1].plot(history.history['val_loss'])
+    ax[1].set_title('Model loss')
+    ax[1].set_ylabel('Loss')
+    ax[1].set_xlabel('Epoch')
+    ax[1].legend(['Train', 'Validation'], loc='upper left')
+    plt.tight_layout()
+    if save_folder is not None:
+        os.makedirs(save_folder, exist_ok=True)
+        file_name = file_name if file_name is not None else "acc_loss.png"
+        save_path = os.path.join(save_folder, file_name)
+        fig.savefig(save_path, dpi=200)
+    if show:
+        plt.show()
+    else:
+        plt.close(fig)

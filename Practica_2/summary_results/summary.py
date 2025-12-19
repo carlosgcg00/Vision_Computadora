@@ -8,8 +8,9 @@ import pandas as pd
 
 def build_experiment_row(
     name_model: str,
-    num_vars: int,
     metrics_val: dict,
+    num_vars: int = np.nan,
+    trainable_params: int = np.nan,
     steps = None,
     process_name: str = ""
 ) -> pd.DataFrame:
@@ -37,9 +38,9 @@ def build_experiment_row(
     row_dict = {
         "timestamp": datetime.now().isoformat(timespec="seconds"),
         "model_name": name_model,
-        "process_name": process_name,
         "pipeline_features": pipeline_features,
         "num_vars": num_vars,
+        "trainable_params": trainable_params,
         "accuracy_val": round(metrics_val.get("accuracy", np.nan), 2),
         "precision_val": round(metrics_val.get("precision", np.nan), 2),
         "recall_val": round(metrics_val.get("recall", np.nan), 2),

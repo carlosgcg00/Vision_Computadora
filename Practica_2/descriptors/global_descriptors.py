@@ -7,7 +7,7 @@ import cv2
 
 def histogram_of_oriented_gradients(image, label, orientations=9, pixels_per_cell=(8, 8),
                                     cells_per_block=(2, 2), block_norm='L2', visualize=True,
-                                    feature_vector=True, save_folder=None, plot_flag=None):
+                                    feature_vector=True, save_folder=None, file_name = None, plot_flag=None):
     """
     Compute the histogram of oriented gradients.
     Arguments:
@@ -19,7 +19,9 @@ def histogram_of_oriented_gradients(image, label, orientations=9, pixels_per_cel
         - block_norm: normalization of the blocks it can be 'L2', 'L1'.
         - visualize: if we want to have the image of hog
         - feature_vector: if we want to have the feature vector in 1D
-
+        - save_folder: folder to save the plots
+        - file_name: name of the file to save the plot
+        - plot_flag: if True, show the plots
     Return:
         - hog_feat: HOG de la imagen (vector 1D)
     """
@@ -69,7 +71,8 @@ def histogram_of_oriented_gradients(image, label, orientations=9, pixels_per_cel
 
     if save_folder is not None:
         os.makedirs(save_folder, exist_ok=True)
-        save_path = os.path.join(save_folder, "hog_grid.png")
+        file_name = file_name if file_name is not None else "hog_grid.png"
+        save_path = os.path.join(save_folder, file_name)
         plt.savefig(save_path, dpi=200)
 
     if plot_flag:
@@ -82,7 +85,7 @@ def histogram_of_oriented_gradients(image, label, orientations=9, pixels_per_cel
 
 def glcm_global(image, label, distances=[1],
                 angles=[0, np.pi / 4, np.pi / 2, 3 * np.pi / 4],
-                save_folder=None, plot_flag=None):
+                save_folder=None, file_name=None, plot_flag=None):
     """
     Compute the Gray Level Co ocurrence matrix.
     Arguments:
@@ -91,6 +94,7 @@ def glcm_global(image, label, distances=[1],
         - distances: list of distances, distance to neighbours where it is going to be computed
         - angles: list of angles, the direction where it is going to be computed
         - save_folder: folder to save the plots
+        - file_name: name of the file to save the plot
         - plot_flag: if True, show the plots
     Returns:
         - feature_vector: glcm features de la imagen (vector 1D)
@@ -124,52 +128,75 @@ def glcm_global(image, label, distances=[1],
 
     num_dist = len(distances)
     num_ang = len(angles)
-
-    # +1 columna para colocar la imagen original
-    fig = plt.figure(figsize=((num_ang + 1) * 3, num_dist * 3), dpi=200)
+    
+    # Calculamos filas necesarias por cada distancia (2 ángulos por fila)
+    # Cada fila tendrá 3 columnas: [Imagen/Vacío, Angulo_i, Angulo_i+1]
+    import math
+    rows_per_dist = math.ceil(num_ang / 2)
+    total_rows = num_dist * rows_per_dist
+    
+    # 3 columnas fijas
+    fig = plt.figure(figsize=(3 * 3, total_rows * 3), dpi=200)
     fig.suptitle(f"GLCM Visualization - Image: ({label})")
 
     plot_index = 1
 
     for d_i, d in enumerate(distances):
-
-        # 1. PLOT DE LA IMAGEN ORIGINAL AL INICIO DE CADA FILA
-        ax0 = plt.subplot(num_dist, num_ang + 1, plot_index)
-        ax0.imshow(img, cmap='gray')
-        ax0.set_title("Original")
-        ax0.axis("off")
-        plot_index += 1
-
-        # 2. PLOTS DE GLCM POR ÁNGULO
-        for a_i, a in enumerate(angles):
-
-            glcm = graycomatrix(
-                img,
-                distances=[d],
-                angles=[a],
-                levels=256,
-                symmetric=True,
-                normed=True
-            )
-
-            con = graycoprops(glcm, 'contrast')[0][0]
-            hom = graycoprops(glcm, 'homogeneity')[0][0]
-
-            ax = plt.subplot(num_dist, num_ang + 1, plot_index)
-            ax.imshow(glcm[:, :, 0, 0], cmap='gray')
-            ax.set_title(
-                f"d={d}, angle={np.degrees(a):.0f}°\n"
-                f"Con={con:.2f}, Hom={hom:.2f}"
-            )
-            ax.axis("off")
-
+        # Iteramos sobre los ángulos de 2 en 2
+        for row_idx in range(rows_per_dist):
+            
+            # --- COLUMNA 1: IMAGEN ORIGINAL O VACÍO ---
+            ax0 = plt.subplot(total_rows, 3, plot_index)
+            # Solo pintamos la original en la primera fila de cada distancia
+            if row_idx == 0:
+                ax0.imshow(img, cmap='gray')
+                ax0.set_title(f"Original (d={d})")
+            else:
+                # Hueco vacío
+                pass
+            ax0.axis("off")
             plot_index += 1
+
+            # Ángulos correspondientes a esta fila
+            start_ang_idx = row_idx * 2
+            end_ang_idx = min(start_ang_idx + 2, num_ang)
+            
+            current_angles = angles[start_ang_idx:end_ang_idx]
+            
+            # --- COLUMNAS 2 y 3: GLCMs ---
+            for a_i, a in enumerate(current_angles):
+                glcm = graycomatrix(
+                    img,
+                    distances=[d],
+                    angles=[a],
+                    levels=256,
+                    symmetric=True,
+                    normed=True
+                )
+
+                con = graycoprops(glcm, 'contrast')[0][0]
+                hom = graycoprops(glcm, 'homogeneity')[0][0]
+
+                ax = plt.subplot(total_rows, 3, plot_index)
+                ax.imshow(glcm[:, :, 0, 0], cmap='gray')
+                ax.set_title(
+                    f"Angle={np.degrees(a):.0f}°\n"
+                    f"Con={con:.2f}, Hom={hom:.2f}"
+                )
+                ax.axis("off")
+                plot_index += 1
+            
+            # Si solo había 1 ángulo en esta fila, avanzamos el plot_index 
+            # para saltar la 3a columna vacía y mantener la rejilla alineada
+            if len(current_angles) < 2:
+                 plot_index += (2 - len(current_angles))
 
     plt.tight_layout()
 
     if save_folder is not None:
         os.makedirs(save_folder, exist_ok=True)
-        save_path = os.path.join(save_folder, f"glcm_image_0.png")
+        file_name = file_name if file_name is not None else "glcm.png"
+        save_path = os.path.join(save_folder, file_name)
         plt.savefig(save_path, dpi=200)
 
     if plot_flag:
@@ -183,7 +210,7 @@ def glcm_global(image, label, distances=[1],
 def glcm_with_patches(image, label, distances=[1],
                       angles=[0, np.pi/4, np.pi/2, 3*np.pi/4],
                       patch_coords=None, grid_size=None,
-                      save_folder=None, plot_flag=None):
+                      save_folder=None, file_name=None, plot_flag=None):
     """
     Compute GLCM features using patches or grid division of each image.
 
@@ -195,6 +222,7 @@ def glcm_with_patches(image, label, distances=[1],
         - patch_coords: list of (y1, y2, x1, x2) defining manual patches.
         - grid_size: tuple (N, M) to split each image into N×M equal patches.
         - save_folder: folder to save visualization plots.
+        - file_name: name of the file to save the plot
         - plot_flag: if True, display plots; if False, close them.
 
     Returns:
@@ -331,7 +359,8 @@ def glcm_with_patches(image, label, distances=[1],
 
     if save_folder is not None:
         os.makedirs(save_folder, exist_ok=True)
-        save_path = os.path.join(save_folder, f"glcm_patches_img0.png")
+        file_name = file_name if file_name is not None else "glcm_patches.png"
+        save_path = os.path.join(save_folder, file_name)
         plt.savefig(save_path, dpi=200)
 
     if plot_flag:
@@ -429,7 +458,7 @@ def lbp_image_map(image, start_from='top_left'):
 # ----------------------------------------------------------------------
 def local_binary_patterns(image, label,
                           start_from='top_left', N_bins = 0,
-                          save_folder=None, plot_flag=None):
+                          save_folder=None, file_name=None, plot_flag=None):
     """
     Compute Local Binary Pattern (LBP) descriptors for a set of images.
 
@@ -505,7 +534,8 @@ def local_binary_patterns(image, label,
 
     if save_folder is not None:
         os.makedirs(save_folder, exist_ok=True)
-        save_path = os.path.join(save_folder, "lbp_grid.png")
+        file_name = file_name if file_name is not None else "lbp_grid.png"
+        save_path = os.path.join(save_folder, file_name)
         plt.savefig(save_path, dpi=200)
 
     if plot_flag:
@@ -517,10 +547,10 @@ def local_binary_patterns(image, label,
 
 
 
-def lbp_features_skiimage(image, label,
+def lbp_features_skimage(image, label,
                           P=8, R=1, method='default',
                           N_bins=0,
-                          save_folder=None, plot_flag=None):
+                          save_folder=None, file_name=None, plot_flag=None):
     """
     Compute Local Binary Pattern (LBP) descriptors for a single image
     using skimage.feature.local_binary_pattern.
@@ -534,6 +564,7 @@ def lbp_features_skiimage(image, label,
         - N_bins: si es 0 → bins de tamaño 1 (hasta 2^P - 1).
                   si es 1 → bins de tamaño 2, etc. (step = 2^N_bins).
         - save_folder: carpeta donde guardar la figura (si no es None).
+        - file_name: nombre de la figura (si no es None).
         - plot_flag: si True, muestra la figura; si False, la cierra.
 
     Return:
@@ -592,7 +623,8 @@ def lbp_features_skiimage(image, label,
 
     if save_folder is not None:
         os.makedirs(save_folder, exist_ok=True)
-        save_path = os.path.join(save_folder, "lbp_skiimage_grid.png")
+        file_name = file_name if file_name is not None else "lbp_skimage_grid.png"
+        save_path = os.path.join(save_folder, file_name)
         plt.savefig(save_path, dpi=200)
 
     if plot_flag:

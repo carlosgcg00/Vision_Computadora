@@ -25,6 +25,7 @@ def harris_corner_features(
     k: float = 0.04,
     threshold_rel: float = 0.01,
     save_folder: Optional[str] = None,
+    file_name: Optional[str] = None,
     plot_flag: Optional[bool] = None,
 ) -> np.ndarray:
     """
@@ -47,6 +48,7 @@ def harris_corner_features(
         threshold_rel: umbral relativo (0–1) sobre la respuesta máxima para
             decidir qué píxeles son esquinas.
         save_folder: carpeta donde guardar la visualización (si no es None).
+        file_name: nombre de la figura (si no es None).
         plot_flag: si True, muestra la figura; si False, la cierra.
 
     Returns:
@@ -124,7 +126,8 @@ def harris_corner_features(
 
         if save_folder is not None:
             os.makedirs(save_folder, exist_ok=True)
-            save_path = os.path.join(save_folder, "harris_grid.png")
+            file_name = file_name if file_name is not None else "harris_grid.png"
+            save_path = os.path.join(save_folder, file_name)
             plt.savefig(save_path, bbox_inches="tight")
 
         if plot_flag:
@@ -141,6 +144,7 @@ def canny_edge_features(
     blur_sigma: float = 1.5,
     thresholds: Tuple[int, int] = (50, 80),
     save_folder: Optional[str] = None,
+    file_name: Optional[str] = None,
     plot_flag: Optional[bool] = None,
 ) -> np.ndarray:
     """
@@ -224,7 +228,8 @@ def canny_edge_features(
 
         if save_folder is not None:
             os.makedirs(save_folder, exist_ok=True)
-            save_path = os.path.join(save_folder, "canny_edges.png")
+            file_name = file_name if file_name is not None else "canny_edges.png"
+            save_path = os.path.join(save_folder, file_name)
             plt.savefig(save_path, bbox_inches="tight")
 
         if plot_flag:
@@ -247,6 +252,7 @@ def sift_features(
     sift: Optional[cv.SIFT] = None,
     return_keypoints: bool = False,
     save_folder: Optional[str] = None,
+    file_name: Optional[str] = None,
     plot_flag: Optional[bool] = None,
 ):
     """
@@ -258,6 +264,7 @@ def sift_features(
         sift: Optional pre-created SIFT object. If None, a new one is created.
         return_keypoints: If True, both keypoints and descriptors are returned.
         save_folder: If not None, folder where the visualization will be saved.
+        file_name: name of the file to save the plot
         plot_flag: If True, `plt.show()` is called. If False, the figure is
             closed. If None, only saving (if `save_folder`) is performed.
 
@@ -306,7 +313,8 @@ def sift_features(
 
         if save_folder:
             os.makedirs(save_folder, exist_ok=True)
-            save_path = os.path.join(save_folder, "sift_keypoints.png")
+            file_name = file_name if file_name is not None else "sift_keypoints.png"
+            save_path = os.path.join(save_folder, file_name)
             plt.savefig(save_path, bbox_inches="tight")
 
         if plot_flag:
@@ -325,8 +333,6 @@ def sift_features_1D(
     strategies: Sequence[str] = ("mean_std",),
     k: int = 50,
     sift: Optional[cv.SIFT] = None,
-    save_folder: Optional[str] = None,
-    plot_flag: Optional[bool] = None,
 ) -> np.ndarray:
     """
     Wrapper around `sift_features` to obtain a fixed-length 1D descriptor.
@@ -343,8 +349,6 @@ def sift_features_1D(
         strategies: Iterable of strategies among {"mean", "mean_std", "top_k"}.
         k: Number of descriptors used when "top_k" is enabled.
         sift: Optional pre-created SIFT instance.
-        save_folder: Folder where SIFT visualization will be stored.
-        plot_flag: Whether to show the SIFT visualization.
 
     Returns:
         feature_vector_1d: Concatenated 1D numpy array.
@@ -354,8 +358,6 @@ def sift_features_1D(
         label=label,
         sift=sift,
         return_keypoints=True,
-        save_folder=save_folder,
-        plot_flag=plot_flag,
     )
 
     # Compute dimensionality for all requested strategies
@@ -574,6 +576,7 @@ def plot_bovw_examples(
     N: int = 4,
     max_cols: int = 4,
     save_folder: Optional[str] = None,
+    file_name: Optional[str] = None,
     plot_flag: bool = False,
     label_map: Optional[Dict[Any, int]] = None,
 ):
@@ -645,7 +648,8 @@ def plot_bovw_examples(
 
     if save_folder:
         os.makedirs(save_folder, exist_ok=True)
-        save_path = os.path.join(save_folder, "bovw_examples.png")
+        file_name = file_name if file_name is not None else "bovw_examples.png"
+        save_path = os.path.join(save_folder, file_name)
         plt.savefig(save_path, bbox_inches="tight")
     if plot_flag:
         plt.show()
@@ -663,6 +667,7 @@ def build_bovw_dataset(
     sift: Optional[cv.SIFT] = None,
     label_map: Optional[Dict[Any, int]] = None,
     save_folder: Optional[str] = None,
+    file_name: Optional[str] = None,
     plot_N: int = 4,
     plot_flag: bool = False,
     max_cols: int = 4,
@@ -678,6 +683,7 @@ def build_bovw_dataset(
         sift: Optional SIFT instance.
         label_map: Optional dict mapping original labels to integer ids.
         save_folder: Folder where a visualization of BoVW examples is saved.
+        file_name: name of the file to save the plot
         plot_N: Number of random examples to visualize.
         plot_flag: Whether to show the visualization.
         max_cols: Max number of columns for visualization grid.
@@ -716,6 +722,7 @@ def build_bovw_dataset(
             N=plot_N,
             max_cols=max_cols,
             save_folder=save_folder,
+            file_name=file_name,
             plot_flag=plot_flag,
             label_map=label_map,
         )
@@ -834,6 +841,7 @@ def plot_vlad_examples(
     N: int = 4,
     max_cols: int = 4,
     save_folder: Optional[str] = None,
+    file_name: Optional[str] = None,
     plot_flag: bool = False,
     label_map: Optional[Dict[Any, int]] = None,
     normalize: bool = True,
@@ -916,7 +924,8 @@ def plot_vlad_examples(
 
     if save_folder:
         os.makedirs(save_folder, exist_ok=True)
-        save_path = os.path.join(save_folder, "vlad_examples.png")
+        file_name = file_name if file_name is not None else "vlad_examples.png"
+        save_path = os.path.join(save_folder, file_name)
         plt.savefig(save_path, bbox_inches="tight")
     if plot_flag:
         plt.show()
@@ -936,6 +945,7 @@ def build_vlad_dataset(
     power_norm: bool = True,
     intra_norm: bool = False,
     save_folder: Optional[str] = None,
+    file_name: Optional[str] = None,
     plot_N: int = 4,
     plot_flag: bool = False,
     max_cols: int = 4,
@@ -951,6 +961,7 @@ def build_vlad_dataset(
         label_map: Optional dict mapping original labels to integer ids.
         normalize, power_norm, intra_norm: Parameters passed to VLAD.
         save_folder: Folder where a visualization of VLAD examples is saved.
+        file_name: name of the file to save the plot
         plot_N: Number of random examples to visualize.
         plot_flag: Whether to show the visualization.
         max_cols: Max number of columns for visualization grid.
@@ -995,6 +1006,7 @@ def build_vlad_dataset(
             N=plot_N,
             max_cols=max_cols,
             save_folder=save_folder,
+            file_name=file_name,
             plot_flag=plot_flag,
             label_map=label_map,
             normalize=normalize,
