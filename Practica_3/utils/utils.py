@@ -21,7 +21,7 @@ def save_ds_images(dataset, labels, save_dir):
     
     for sample in dataset:
         image = sample["image"]
-        file_name = f"{labels[sample['label']]}_{counter[sample['label']]:04d}.png"
+        file_name = f"{labels[sample['labels']]}_{counter[sample['labels']]:04d}.png"
         file_path = os.path.join(save_dir, file_name)
         
         try:
