@@ -164,3 +164,67 @@ def analysis_dataset(dataset, labels):
 
     df = pd.DataFrame(class_counter.items(), columns=["Label", "Count"]).sort_values(by="Count", ascending=False)
     return df
+
+
+
+def plot_loss_accuracy(history, save_dir = None, save_name = None):
+    """
+    Plot the loss and accuracy of the model.
+    
+    Args:
+        history: History of the model.
+        save_dir: Directory to save the plot.
+        save_name: Name of the saved plot.
+    """
+    
+    fig, axs = plt.subplots(1, 2, figsize=(12, 6))
+    
+    axs[0].plot(range(0, len(history.history['accuracy'])), history.history['accuracy'], label='Train')
+    axs[0].plot(range(0, len(history.history['val_accuracy'])), history.history['val_accuracy'], label='Test')
+    axs[0].set_xlabel('Epochs')
+    axs[0].set_ylabel('Accuracy')
+    axs[0].legend()
+
+    axs[1].plot(range(0, len(history.history['loss'])), history.history['loss'], label='Train')
+    axs[1].plot(range(0, len(history.history['val_loss'])), history.history['val_loss'], label='Test')
+    axs[1].set_xlabel('Epochs')
+    axs[1].set_ylabel('Loss')
+    axs[1].legend()
+    
+    
+    plt.show()
+    if save_dir and save_name:
+        plt.savefig(os.path.join(save_dir, save_name), dpi=300)
+
+def plot_loss_accuracy_tl_ft(history_tf, history_ft, save_dir = None, save_name = None):
+    """
+    Plot the loss and accuracy of the model.
+    
+    Args:
+        history: History of the model.
+        save_dir: Directory to save the plot.
+        save_name: Name of the saved plot.
+    """
+    
+    fig, axs = plt.subplots(1, 2, figsize=(12, 6))
+    
+    axs[0].plot(range(0, len(history_tf.history['accuracy'])), history_tf.history['accuracy'], label='Train (TF)')
+    axs[0].plot(range(0, len(history_tf.history['val_accuracy'])), history_tf.history['val_accuracy'], label='Test (TF)')
+    axs[0].plot(range(0, len(history_ft.history['accuracy'])), history_ft.history['accuracy'], label='Train (FT)')
+    axs[0].plot(range(0, len(history_ft.history['val_accuracy'])), history_ft.history['val_accuracy'], label='Test (FT)')
+    axs[0].set_xlabel('Epochs')
+    axs[0].set_ylabel('Accuracy')
+    axs[0].legend()
+
+    axs[1].plot(range(0, len(history_tf.history['loss'])), history_tf.history['loss'], label='Train (TF)')
+    axs[1].plot(range(0, len(history_tf.history['val_loss'])), history_tf.history['val_loss'], label='Test (TF)')
+    axs[1].plot(range(0, len(history_ft.history['loss'])), history_ft.history['loss'], label='Train (FT)')
+    axs[1].plot(range(0, len(history_ft.history['val_loss'])), history_ft.history['val_loss'], label='Test (FT)')
+    axs[1].set_xlabel('Epochs')
+    axs[1].set_ylabel('Loss')
+    axs[1].legend()
+    
+    
+    plt.show()
+    if save_dir and save_name:
+        plt.savefig(os.path.join(save_dir, save_name), dpi=300)
